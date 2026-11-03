@@ -154,7 +154,7 @@ function startArcade(){
    :['DIVERSIDAD','IGUALDAD','EQUIDAD','DIGNIDAD','RESPETO','INCLUSIÓN','IDENTIDAD','PERTENENCIA','ANTIRRACISMO','CONVIVENCIA','DERECHOS','PLURALIDAD','INTERCULTURALIDAD','RECONOCIMIENTO'];
   const side=Math.floor(Math.random()*4),pad=30;let x,y;
   if(side===0){x=Math.random()*900;y=-pad}else if(side===1){x=930;y=Math.random()*430}else if(side===2){x=Math.random()*900;y=460}else{x=-30;y=Math.random()*430}
-  const dx=A.x-x,dy=A.y-y,len=Math.max(1,Math.hypot(dx,dy)),speed=(hostile?0.72:0.62)+Math.random()*.36;
+  const dx=A.x-x,dy=A.y-y,len=Math.max(1,Math.hypot(dx,dy)),speed=((hostile?0.83:0.71)+Math.random()*.40);
   A.targets.push({x,y,vx:dx/len*speed,vy:dy/len*speed,s:list[Math.floor(Math.random()*list.length)],hostile,remove:false,r:hostile?13:12});
  }
  function draw(timestamp){
@@ -163,7 +163,7 @@ function startArcade(){
   ctx.clearRect(0,0,900,430);ctx.strokeStyle='#17283a';ctx.lineWidth=1;
   for(let x=0;x<900;x+=45){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,430);ctx.stroke()}
   for(let y=0;y<430;y+=45){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(900,y);ctx.stroke()}
-  A.spawnElapsed+=elapsed;if(A.spawnElapsed>=1320&&A.targets.length<13){spawn();A.spawnElapsed=0}
+  A.spawnElapsed+=elapsed;if(A.spawnElapsed>=1220&&A.targets.length<13){spawn();A.spawnElapsed=0}
   A.fireElapsed+=elapsed;if((A.fireHeld||A.spaceHeld)&&A.fireElapsed>=270)fire();
   if(A.turnLeft)A.angle-=.055*dt;if(A.turnRight)A.angle+=.055*dt;
   A.targets.forEach(t=>{t.x+=t.vx*dt;t.y+=t.vy*dt});
@@ -178,8 +178,8 @@ function startArcade(){
      if(t.hostile){
       A.hits++;
       record('Neutralizaste '+t.s+'.',true,'Identificaste y neutralizaste una idea discriminatoria.','Neutralizar '+t.s);
-      addScore(50);
-      $('arcadeMessage').textContent='OBJETIVO HOSTIL NEUTRALIZADO: '+t.s+'. +50 puntos.';
+      addScore(60);
+      $('arcadeMessage').textContent='OBJETIVO HOSTIL NEUTRALIZADO: '+t.s+'. +60 puntos.';
      }else{
       $('arcadeMessage').textContent='CONCEPTO POSITIVO DESTRUIDO: '+t.s+'. No recibís daño, pero tampoco obtenés escudo ni puntos. ¡Reservá los positivos para absorberlos!';
      }
@@ -196,7 +196,7 @@ function startArcade(){
      if(timestamp<A.shieldUntil){A.shieldUntil=0;damage('El escudo fue consumido por el impacto.');record('El escudo no evitó el impacto de '+t.s+'.',false,'El campo protector puede absorber un concepto positivo, pero un impacto hostil igualmente consume una vida.','Destruir '+t.s);$('arcadeMessage').textContent='¡ESCUDO ROTO! '+t.s+' atravesó la protección: perdiste una vida. Recogé otro concepto positivo para reactivarla.'}
      else{damage('Una idea discriminatoria chocó contra la nave.');record('Te alcanzó '+t.s+'.',false,'Las ideas discriminatorias deben neutralizarse antes de que lleguen a la nave.','Destruir '+t.s);$('arcadeMessage').textContent='IMPACTO: '+t.s+' alcanzó la nave.'}
     }else{
-     A.protected++;A.shieldUntil=Math.max(A.shieldUntil,timestamp)+6500;addScore(25);$('arcadeMessage').textContent='¡CONCEPTO ABSORBIDO! '+t.s+' activó el campo protector.'
+     A.protected++;A.shieldUntil=Math.max(A.shieldUntil,timestamp)+6500;addScore(30);$('arcadeMessage').textContent='¡CONCEPTO ABSORBIDO! '+t.s+' activó el campo protector.'
     }
    }
   }
