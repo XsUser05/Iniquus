@@ -1,0 +1,5 @@
+# Local development and private test files
+*dev*
+*DEV*
+.env
+*.local
