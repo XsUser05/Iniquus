@@ -115,7 +115,7 @@ function renderWord(){let item=words[wordIndex];guessed=[];wrongLetters=0;$('gam
 function updateWord(){$('wordDisplay').textContent=words[wordIndex].w.split('').map(c=>guessed.includes(c)?c:'_').join(' ');$('wrongCount').textContent=wrongLetters}
 function guess(c){if(guessed.includes(c)||life<=0)return;guessed.push(c);let w=words[wordIndex].w;if(!w.includes(c)){wrongLetters++;damage('Una letra incorrecta.');}if(failed){showRetry('Se agotaron los corazones intentando descifrar el término.');return}document.querySelector(`[data-letter="${c}"]`).disabled=true;updateWord();if(w.split('').every(x=>guessed.includes(x))){record(w,true,words[wordIndex].hint,w);addScore(150);$('wordFeedback').innerHTML=`<div class="feedback good">CONCEPTO IDENTIFICADO +150<p>${words[wordIndex].hint}</p><button id="wordNext">${wordIndex===2?'Finalizar prueba':'Siguiente concepto'}</button></div>`;$('letters').querySelectorAll('button').forEach(b=>b.disabled=true);$('wordNext').onclick=()=>{wordIndex++;if(wordIndex===3)finish();else renderWord()}}else if(wrongLetters>=3&&life>0){record(w,false,`La palabra era ${w}. ${words[wordIndex].hint}`,w);$('wordFeedback').innerHTML=`<div class="feedback bad">PISTA REVELADA<p>La palabra era <b>${w}</b>. ${words[wordIndex].hint}</p><button id="wordNext">Continuar</button></div>`;$('letters').querySelectorAll('button').forEach(b=>b.disabled=true);$('wordNext').onclick=()=>{wordIndex++;if(wordIndex===3)finish();else renderWord()}}}
 function startArcade(){
- $('game').innerHTML=`<div class="eyebrow">CAMPO DE ASTEROIDES · 10 OBJETIVOS</div><p class="small">La nave está en el centro. Apuntá moviendo el mouse o arrastrando el dedo sobre el campo. Dispará con el botón o con ESPACIO. Destruí las ideas discriminatorias y recogé las positivas para activar un campo protector.</p><canvas id="arena" width="900" height="430" aria-label="Campo espacial: girá la nave para apuntar, dispará a los enemigos y recogé conceptos positivos"></canvas><div class="arcade-controls single" aria-label="Control de disparo"><button id="fireTouch" class="fire" aria-label="Disparar">◎ DISPARAR</button></div><div class="gamebar"><span class="small" id="arcadeStatus">ENEMIGOS DESTRUIDOS: 0/10</span><span class="small" id="arcadeShield">CAMPO: INACTIVO</span></div><div id="arcadeMessage" class="small" role="status">Apuntá hacia una idea discriminatoria. ¡Y recogé las palabras positivas!</div>`;
+ $('game').innerHTML=`<div class="eyebrow">CAMPO DE ASTEROIDES · 10 OBJETIVOS</div><p class="small">La nave está en el centro. Apuntá moviendo el mouse o arrastrando el dedo sobre el campo. Dispará con el botón o con ESPACIO. Neutralizá las ideas discriminatorias (rojas) y absorbé los conceptos positivos (celestes) para activar el escudo. También podés disparar a los positivos, pero los desperdiciarás: no recibirás daño, aunque tampoco obtendrás su protección.</p><canvas id="arena" width="900" height="430" aria-label="Campo espacial: girá la nave para apuntar, dispará a los enemigos y recogé conceptos positivos"></canvas><div class="arcade-controls single" aria-label="Control de disparo"><button id="fireTouch" class="fire" aria-label="Disparar">◎ DISPARAR</button></div><div class="gamebar"><span class="small" id="arcadeStatus">ENEMIGOS DESTRUIDOS: 0/10</span><span class="small" id="arcadeShield">CAMPO: INACTIVO</span></div><div id="arcadeMessage" class="small" role="status">Apuntá hacia una idea discriminatoria. ¡Y recogé las palabras positivas!</div>`;
  let canvas=$('arena'),ctx=canvas.getContext('2d');
  arcade={canvas,ctx,x:450,y:215,angle:0,bullets:[],targets:[],hits:0,protected:0,lastTime:0,spawnElapsed:0,fireElapsed:500,fireHeld:false,spaceHeld:false,turnLeft:false,turnRight:false,shieldUntil:0,running:true,raf:0};let A=arcade;
  function clearControls(){A.fireHeld=false;A.spaceHeld=false;A.turnLeft=false;A.turnRight=false}
@@ -149,7 +149,9 @@ function startArcade(){
  fireButton.addEventListener('pointerdown',pointerDown);fireButton.addEventListener('pointerup',pointerUp);fireButton.addEventListener('pointercancel',pointerUp);fireButton.addEventListener('lostpointercapture',pointerUp);
  A.cleanup=()=>{clearControls();window.removeEventListener('keydown',keydown);window.removeEventListener('keyup',keyup);window.removeEventListener('blur',clearControls);document.removeEventListener('visibilitychange',visibility);canvas.removeEventListener('pointerdown',canvasPointer);canvas.removeEventListener('pointermove',canvasPointer);fireButton.removeEventListener('pointerdown',pointerDown);fireButton.removeEventListener('pointerup',pointerUp);fireButton.removeEventListener('pointercancel',pointerUp);fireButton.removeEventListener('lostpointercapture',pointerUp)};
  function spawn(){
-  const hostile=Math.random()<.64,list=hostile?['PREJUICIO','EXCLUSIÓN','ESTEREOTIPO','ODIO RACIAL','SUPERIORIDAD']:['DIVERSIDAD','IGUALDAD','DIGNIDAD','RESPETO'];
+  const hostile=Math.random()<.64,list=hostile
+   ?['RACISMO','PREJUICIO','XENOFOBIA','DISCRIMINACIÓN','SEGREGACIÓN','ESTEREOTIPO','EXCLUSIÓN','SUPREMACISMO','INTOLERANCIA','RACISMO CULTURAL']
+   :['DIVERSIDAD','IGUALDAD','EQUIDAD','DIGNIDAD','RESPETO','INCLUSIÓN','IDENTIDAD','PERTENENCIA','ANTIRRACISMO','CONVIVENCIA','DERECHOS','PLURALIDAD','INTERCULTURALIDAD','RECONOCIMIENTO'];
   const side=Math.floor(Math.random()*4),pad=30;let x,y;
   if(side===0){x=Math.random()*900;y=-pad}else if(side===1){x=930;y=Math.random()*430}else if(side===2){x=Math.random()*900;y=460}else{x=-30;y=Math.random()*430}
   const dx=A.x-x,dy=A.y-y,len=Math.max(1,Math.hypot(dx,dy)),speed=(hostile?0.72:0.62)+Math.random()*.36;
@@ -166,7 +168,25 @@ function startArcade(){
   if(A.turnLeft)A.angle-=.055*dt;if(A.turnRight)A.angle+=.055*dt;
   A.targets.forEach(t=>{t.x+=t.vx*dt;t.y+=t.vy*dt});
   A.bullets.forEach(b=>{b.x+=b.vx*dt;b.y+=b.vy*dt});
-  for(const b of A.bullets){if(b.remove)continue;for(const t of A.targets){if(t.remove||!t.hostile)continue;if(Math.hypot(b.x-t.x,b.y-t.y)<22){b.remove=true;t.remove=true;A.hits++;state.stats.shots++;record('Neutralizaste '+t.s+'.',true,'Identificaste y neutralizaste una idea discriminatoria.','Neutralizar '+t.s);addScore(50);$('arcadeMessage').textContent='OBJETIVO DESTRUIDO: '+t.s+'. +50 puntos.';break}}}
+  for(const b of A.bullets){
+   if(b.remove)continue;
+   for(const t of A.targets){
+    if(t.remove)continue;
+    if(Math.hypot(b.x-t.x,b.y-t.y)<22){
+     b.remove=true;t.remove=true;
+     state.stats.shots++;
+     if(t.hostile){
+      A.hits++;
+      record('Neutralizaste '+t.s+'.',true,'Identificaste y neutralizaste una idea discriminatoria.','Neutralizar '+t.s);
+      addScore(50);
+      $('arcadeMessage').textContent='OBJETIVO HOSTIL NEUTRALIZADO: '+t.s+'. +50 puntos.';
+     }else{
+      $('arcadeMessage').textContent='CONCEPTO POSITIVO DESTRUIDO: '+t.s+'. No recibís daño, pero tampoco obtenés escudo ni puntos. ¡Reservá los positivos para absorberlos!';
+     }
+     break;
+    }
+   }
+  }
   for(const t of A.targets){
    if(t.remove)continue;
    const d=Math.hypot(t.x-A.x,t.y-A.y);
