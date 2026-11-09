@@ -43,7 +43,51 @@ main{width:min(1080px,calc(100% - 32px));margin:auto;padding:calc(24px + env(saf
 .music-volume{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:10px;letter-spacing:.1em}
 .music-volume input{width:82px;accent-color:var(--cyan)}
 @media(max-width:620px){.music-controls{width:100%}.music-controls button{flex:1}.music-volume{margin-left:auto}}
-\n</style>
+\n
+/* Nivel 2: puertas físicas, con marco, hoja, paneles y herrajes */
+#game .doorgrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(14px,3vw,28px);margin:24px auto;max-width:900px;perspective:1100px}
+#game .door{
+  position:relative;isolation:isolate;overflow:hidden;min-height:360px;padding:22px 18px 18px;
+  display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:12px;
+  border:9px solid #566574;border-bottom-width:12px;border-radius:115px 115px 5px 5px;
+  background:linear-gradient(90deg,#090e15,#28394a 12%,#111c29 23%,#1c2a39 50%,#101a26 78%,#344657 92%,#0b1119);
+  box-shadow:inset 0 0 0 3px #0a1018,inset 0 0 28px #000b,0 18px 30px #0008;
+  transform:translateZ(0);transition:transform .22s ease,filter .22s ease,border-color .22s ease;
+}
+#game .door::before{
+  content:"";position:absolute;z-index:-1;inset:13px 12px 12px;
+  border:3px solid #8493a0;border-bottom:5px solid #647482;border-radius:94px 94px 2px 2px;
+  background:
+    linear-gradient(90deg,#0c1622 0 7%,transparent 7% 93%,#0a121c 93%),
+    linear-gradient(180deg,#34485b 0%,#1c2d3e 22%,#182838 72%,#0c1723 100%);
+  box-shadow:inset 0 0 22px #000b,0 0 0 2px #101923;
+}
+#game .door::after{
+  content:"";position:absolute;z-index:-1;left:23%;right:23%;top:32%;height:36%;
+  border:5px ridge #65798a;border-radius:3px;
+  background:linear-gradient(180deg,#22374a,#142333);
+  box-shadow:0 0 0 7px #0c1620,0 0 24px #8bd7d11c;
+}
+#game .door:nth-child(2){filter:hue-rotate(12deg) brightness(.94)}
+#game .door:hover{transform:translateY(-5px);filter:brightness(1.14);border-color:#9bb1c1}
+#game .door .eyebrow{position:relative;z-index:1;margin-bottom:auto;padding:7px 15px;border:1px solid #9aa9b5;background:#0a111beF;color:#d9c58e;letter-spacing:.18em;box-shadow:0 3px 12px #0008}
+#game .door p{
+  position:relative;z-index:1;width:min(100%,340px);min-height:92px;margin:0;padding:13px 14px;
+  display:flex;align-items:center;justify-content:center;text-align:center;
+  color:#f0eee5;font-size:clamp(13px,1.6vw,16px);line-height:1.45;
+  background:linear-gradient(145deg,#0a1119f2,#172535f2);border:2px solid #8293a1;
+  box-shadow:0 5px 16px #000b,inset 0 0 0 3px #182736;border-radius:3px;
+}
+#game .door button{position:relative;z-index:2;width:min(100%,260px);margin:0 0 4px;padding:12px 10px;background:linear-gradient(180deg,#354b5e,#172635);border:2px solid #a0b1bd;box-shadow:0 5px 0 #080d13,0 8px 16px #0009;letter-spacing:.13em}
+#game .door button::before{content:"◈";margin-right:9px;color:#d9c58e}
+#game .door button:active{transform:translateY(3px);box-shadow:0 2px 0 #080d13}
+@media(max-width:620px){
+ #game .doorgrid{grid-template-columns:1fr;max-width:460px;gap:18px}
+ #game .door{min-height:310px;border-radius:95px 95px 5px 5px}
+ #game .door p{min-height:78px;font-size:14px}
+}
+
+</style>
 </head>
 <body><main>
 <div class="top"><div><div class="kicker">Archivo de entrenamiento · Unidad 07</div><div class="small">SIMULADOR EDUCATIVO // SOCIOLOGÍA</div></div><div class="save">PARTIDA LOCAL · <b id="saveState">GUARDANDO</b></div>
@@ -151,7 +195,7 @@ function stopArcade(){if(arcade){if(arcade.cleanup)arcade.cleanup();if(arcade.ra
 function finish(){exitGameFullscreen();if(activeTimer)clearInterval(activeTimer);stopArcade();if(!state.completed.includes(current))state.completed.push(current);state.completed.sort();state.checkpoints[current]=0;state.failures[current]=0;state.hearts=3;save();$('game').innerHTML=`<div class="feedback good"><div class="eyebrow">PRUEBA SUPERADA</div><div class="result">MISIÓN COMPLETADA</div><p>Terminaste ${levels[current-1].title}. Tu progreso quedó guardado.</p><p class="small">Puntuación acumulada: ${state.score} · Respuestas correctas: ${state.stats.correct}</p><button class="primary" id="next">${current===4?'Ver evaluación final':'Volver al mapa'}</button></div>`;$('next').onclick=()=>{show('home');render();if(current===4)showFinal()}}
 function home(){exitGameFullscreen();if(activeTimer)clearInterval(activeTimer);stopArcade();show('home');render()}
 $('homeBtn').onclick=home;
-function renderDoor(){updateCheckpoint(2,questionIndex+1);let q=questions[2][questionIndex];$('game').innerHTML=`<div class="eyebrow">${difficultyBand(questionIndex,questions[2].length)} · DECISIÓN ${questionIndex+1}/${questions[2].length}</div><h3>${q.q}</h3><div class="doorgrid">${q.a.map((a,i)=>`<div class="door"><div class="eyebrow">OPCIÓN ${i===0?'A':'B'}</div><p>${a}</p><button data-choice="${i}">Elegir opción</button></div>`).join('')}</div><div id="explain"></div>`;document.querySelectorAll('[data-choice]').forEach(b=>b.onclick=()=>{if(answered)return;answered=true;let ok=+b.dataset.choice===q.c;record(q.q,ok,q.e,q.a[q.c]);if(ok)addScore(100);else damage('La decisión no fue correcta.');$('explain').innerHTML=`<div class="feedback ${ok?'good':'bad'}"><b>${ok?'INTERPRETACIÓN FUNDAMENTADA +100':'ANÁLISIS INCOMPLETO'}</b><p>${q.e}</p><button id="continue" ${life<=0?'':' '}>${life<=0?'Reintentar nivel':questionIndex===questions[2].length-1?'Finalizar prueba':'Siguiente situación'}</button></div>`;$('continue').onclick=()=>{if(life<=0){showRetry('Se agotaron los tres corazones en esta prueba.');return}questionIndex++;updateCheckpoint(2,questionIndex);answered=false;if(questionIndex===questions[2].length)finish();else renderDoor()};updateHUD()})}
+function renderDoor(){updateCheckpoint(2,questionIndex+1);let q=questions[2][questionIndex];$('game').innerHTML=`<div class="eyebrow">${difficultyBand(questionIndex,questions[2].length)} · DECISIÓN ${questionIndex+1}/${questions[2].length}</div><h3>${q.q}</h3><p class="small" style="text-align:center;letter-spacing:.08em">DOS PUERTAS. UNA DECISIÓN. ELEGÍ EL CAMINO MEJOR FUNDAMENTADO.</p><div class="doorgrid">${q.a.map((a,i)=>`<div class="door"><div class="eyebrow">PUERTA ${i===0?'A':'B'}</div><p>${a}</p><button data-choice="${i}" aria-label="Abrir puerta ${i===0?'A':'B'}">Abrir esta puerta</button></div>`).join('')}</div><div id="explain"></div>`;document.querySelectorAll('[data-choice]').forEach(b=>b.onclick=()=>{if(answered)return;answered=true;let ok=+b.dataset.choice===q.c;record(q.q,ok,q.e,q.a[q.c]);if(ok)addScore(100);else damage('La decisión no fue correcta.');$('explain').innerHTML=`<div class="feedback ${ok?'good':'bad'}"><b>${ok?'INTERPRETACIÓN FUNDAMENTADA +100':'ANÁLISIS INCOMPLETO'}</b><p>${q.e}</p><button id="continue" ${life<=0?'':' '}>${life<=0?'Reintentar nivel':questionIndex===questions[2].length-1?'Finalizar prueba':'Siguiente situación'}</button></div>`;$('continue').onclick=()=>{if(life<=0){showRetry('Se agotaron los tres corazones en esta prueba.');return}questionIndex++;updateCheckpoint(2,questionIndex);answered=false;if(questionIndex===questions[2].length)finish();else renderDoor()};updateHUD()})}
 function renderQuiz(){updateCheckpoint(4,questionIndex+1);let q=questions[4][questionIndex];$('game').innerHTML=`<div class="eyebrow">${difficultyBand(questionIndex,questions[4].length)} · INFORME ${questionIndex+1}/${questions[4].length}</div><h3>${q.q}</h3>${q.a.map((a,i)=>`<button class="choice" data-q="${i}">${String.fromCharCode(65+i)}. ${a}</button>`).join('')}<div id="explain"></div>`;document.querySelectorAll('[data-q]').forEach(b=>b.onclick=()=>{if(answered)return;answered=true;let ok=+b.dataset.q===q.c;record(q.q,ok,q.e,q.a[q.c]);if(ok)addScore(125);else damage('La respuesta no identificó el concepto central.');$('explain').innerHTML=`<div class="feedback ${ok?'good':'bad'}"><b>${ok?'CORRECTO +125':'REVISÁ EL ANÁLISIS'}</b><p>${q.e}</p><button id="continue">${life<=0?'Reintentar nivel':questionIndex===questions[4].length-1?'Finalizar prueba':'Siguiente caso'}</button></div>`;$('continue').onclick=()=>{if(life<=0){showRetry('Se agotaron los tres corazones en esta prueba.');return}questionIndex++;updateCheckpoint(4,questionIndex);answered=false;if(questionIndex===questions[4].length)finish();else renderQuiz()};updateHUD()})}
 function renderWord(){updateCheckpoint(3,wordIndex+1);let item=words[wordIndex];guessed=[];wrongLetters=0;$('game').innerHTML=`<div class="eyebrow">${difficultyBand(wordIndex,words.length)} · CONCEPTO ${wordIndex+1}/${words.length}</div><p>${item.hint}</p><div class="word" id="wordDisplay"></div><p class="small">Errores: <b id="wrongCount">0</b> / 3</p><div id="letters" class="letter-grid"></div><div id="wordFeedback"></div>`;let alphabet='ABCDEFGHIJKLMNÑOPQRSTUVWXYZ'.split('');$('letters').innerHTML=alphabet.map(c=>`<button class="letter" data-letter="${c}">${c}</button>`).join('');document.querySelectorAll('[data-letter]').forEach(b=>b.onclick=()=>guess(b.dataset.letter));updateWord()}
 function updateWord(){$('wordDisplay').textContent=words[wordIndex].w.split('').map(c=>guessed.includes(c)?c:'_').join(' ');$('wrongCount').textContent=wrongLetters}
