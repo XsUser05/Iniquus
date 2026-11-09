@@ -35,10 +35,23 @@ main{width:min(1080px,calc(100% - 32px));margin:auto;padding:calc(24px + env(saf
  #play:fullscreen .gamebar,#play.game-fullscreen .gamebar{margin:5px auto}
 }
 
-</style>
+
+/* Música ambiental */
+.music-controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.music-controls button{margin:0;min-height:38px;padding:8px 11px;font-size:10px;border-color:#8bd7d1}
+.music-controls button[aria-pressed="true"]{background:#34483f;border-color:#d9c58e;color:#fff}
+.music-volume{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:10px;letter-spacing:.1em}
+.music-volume input{width:82px;accent-color:var(--cyan)}
+@media(max-width:620px){.music-controls{width:100%}.music-controls button{flex:1}.music-volume{margin-left:auto}}
+\n</style>
 </head>
 <body><main>
-<div class="top"><div><div class="kicker">Archivo de entrenamiento · Unidad 07</div><div class="small">SIMULADOR EDUCATIVO // SOCIOLOGÍA</div></div><div class="save">PARTIDA LOCAL · <b id="saveState">GUARDANDO</b></div></div>
+<div class="top"><div><div class="kicker">Archivo de entrenamiento · Unidad 07</div><div class="small">SIMULADOR EDUCATIVO // SOCIOLOGÍA</div></div><div class="save">PARTIDA LOCAL · <b id="saveState">GUARDANDO</b></div>
+<div class="music-controls" aria-label="Control de música">
+  <button id="musicToggle" type="button" aria-pressed="false" title="Activar o pausar música">♫ Música: apagada</button>
+  <label class="music-volume" for="musicVolume">VOL <input id="musicVolume" type="range" min="0" max="100" value="35"></label>
+</div></div>
+<audio id="backgroundMusic" src="Medieval_Travels_extended_320kbps.mp3" preload="metadata" loop></audio>
 <header><div class="eyebrow">Protocolo de aprendizaje activo</div><h1>INIQUUS</h1><p class="eyebrow">THE EQUALITY PROTOCOL</p><p class="muted">Reconocé la desigualdad. Cuestioná los prejuicios. Cambiá las reglas.</p><p class="small">Cuatro pruebas para analizar cómo operan la raza, la etnia, las minorías y el racismo.</p></header>
 <section class="panel"><div class="stats"><span>PROGRESO <b id="progress">0/4</b></span><span>PUNTOS <b id="score">0</b></span><span>MEJOR RACHA <b id="streak">0</b></span><span>VIDAS <b class="hearts" id="hearts">♥ ♥ ♥</b></span></div><div class="bar"><span id="progressBar" style="width:0%"></span></div><div id="notice" class="small" role="status">Sistema INIQUUS en línea. Seleccioná una prueba para comenzar.</div></section>
 <section id="home" class="panel"><h2>Selección de pruebas</h2><div class="grid" id="levels"></div><div class="rule"></div><button id="reviewBtn">Repasar errores</button><button id="finalBtn" class="primary" disabled>Cuestionario de personalidad</button></section>
@@ -285,5 +298,42 @@ $('finalBtn').onclick=showFinal;$('finalHome').onclick=home;
 $('exportBtn').onclick=()=>{let blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='mision-igualdad-partida.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);$('saveNotice').textContent='Exportación preparada.'};
 $('importBtn').onclick=()=>$('importFile').click();$('importFile').onchange=e=>{let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{try{let x=JSON.parse(r.result);if(!x||typeof x!=='object'||![2,3,4].includes(Number(x.version))||!Array.isArray(x.completed)||!x.completed.every(n=>Number.isInteger(Number(n))&&[1,2,3,4].includes(Number(n)))||!Number.isFinite(Number(x.score))||Number(x.score)<0||(x.answers!==undefined&&!Array.isArray(x.answers))||(x.review!==undefined&&!Array.isArray(x.review)))throw Error('Formato');let candidate=normalizeData(x);state=candidate;save();$('saveNotice').textContent='Partida importada correctamente.'}catch(err){$('saveNotice').textContent='Archivo no válido. La partida actual se conservó.'}};r.onerror=()=>{$('saveNotice').textContent='No se pudo leer el archivo. La partida actual se conservó.'};r.readAsText(f);e.target.value=''};
 $('resetBtn').onclick=()=>{if(confirm('¿Borrar todo el progreso de INIQUUS?')){state=fresh();save();$('saveNotice').textContent='Partida reiniciada.';home()}};
+
+// Música ambiental en bucle. Los navegadores requieren una interacción inicial.
+const bgMusic=$('backgroundMusic'), musicToggle=$('musicToggle'), musicVolume=$('musicVolume');
+let musicEnabled=localStorage.getItem('iniquus_music_enabled')==='true';
+const storedVolume=Number(localStorage.getItem('iniquus_music_volume'));
+bgMusic.volume=Number.isFinite(storedVolume)&&storedVolume>=0&&storedVolume<=1?storedVolume:0.35;
+musicVolume.value=Math.round(bgMusic.volume*100);
+function updateMusicButton(){
+  musicToggle.textContent=bgMusic.paused?'♫ Música: apagada':'♫ Música: activa';
+  musicToggle.setAttribute('aria-pressed',String(!bgMusic.paused));
+}
+async function startBackgroundMusic(){
+  if(!musicEnabled)return;
+  try{await bgMusic.play();updateMusicButton()}
+  catch(err){updateMusicButton()}
+}
+musicToggle.addEventListener('click',async()=>{
+  musicEnabled=!musicEnabled;
+  localStorage.setItem('iniquus_music_enabled',String(musicEnabled));
+  if(musicEnabled) await startBackgroundMusic();
+  else {bgMusic.pause();updateMusicButton()}
+});
+musicVolume.addEventListener('input',()=>{
+  bgMusic.volume=Number(musicVolume.value)/100;
+  localStorage.setItem('iniquus_music_volume',String(bgMusic.volume));
+});
+['pointerdown','keydown','touchstart'].forEach(evt=>{
+  document.addEventListener(evt,()=>{if(musicEnabled&&bgMusic.paused)startBackgroundMusic()},{once:true,passive:true});
+});
+bgMusic.addEventListener('play',updateMusicButton);
+bgMusic.addEventListener('pause',updateMusicButton);
+bgMusic.addEventListener('error',()=>{
+  musicToggle.textContent='♫ Audio no encontrado';
+  musicToggle.title='Colocá Medieval_Travels_extended_320kbps.mp3 junto al HTML';
+});
+updateMusicButton();
+
 normalize();save();render();
 </script></body></html>
